@@ -366,25 +366,32 @@ function App() {
   const [lastCustomValues, setLastCustomValues] = useState(null);
   const [sectionsOpen, setSectionsOpen] = useState(false); // Sections list only renders once Custom has been opened
 
-  const activePreset = useMemo(() => computeActivePreset(values), [values]);
+  // The highlight is Custom the instant its chip is clicked (sectionsOpen is
+  // only ever true right after that click), and otherwise stays purely
+  // derived from the live values — so Default/Compact can never be "checked"
+  // while the values don't actually match them.
+  const activePreset = useMemo(
+    () => (sectionsOpen ? 'custom' : computeActivePreset(values)),
+    [values, sectionsOpen]
+  );
 
   const handlePresetSelect = useCallback((presetKey) => {
     if (presetKey === 'custom') {
-      // Custom is now always clickable: it opens the editor, seeded from the
-      // last custom configuration if one exists, or from whatever is
-      // currently active otherwise. Note this can leave Default/Compact still
-      // highlighted for a moment — accurate, since nothing has diverged yet.
+      // Always clickable: seeds the editor from the last custom snapshot if
+      // one exists, or from whatever is currently active otherwise.
       if (lastCustomValues) setValues({ ...lastCustomValues });
       setSectionsOpen(true);
       return;
     }
-    if (activePreset === 'custom') {
+    // Snapshot the outgoing configuration if it was genuinely custom
+    // (diverged from every preset), so Custom can restore it later.
+    if (computeActivePreset(values) === 'custom') {
       setLastCustomValues({ ...values });
     }
     setValues({ ...PRESETS[presetKey] });
     setLastPreset(presetKey);
     setSectionsOpen(false);
-  }, [activePreset, values, lastCustomValues]);
+  }, [values, lastCustomValues]);
 
   const handleSectionChange = useCallback((sectionId, option) => {
     setValues(prev => {
