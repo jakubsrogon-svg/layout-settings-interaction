@@ -418,18 +418,18 @@ function SectionOptionGroup({ section, value, onChange }) {
 /* Section row — always expanded; only ever rendered in Custom          */
 /* ------------------------------------------------------------------ */
 
-function SectionRow({ section, value, onChange, resetTarget, onReset }) {
+function SectionRow({ section, value, onChange, showReset, onReset }) {
   return (
     <div className="section-row overflow-hidden">
       <div className="flex items-center justify-between px-5 pt-4 pb-1">
         <span className="text-[1.0625rem] font-medium" style={{ color: 'var(--ink-soft)' }}>{section.label}</span>
-        {resetTarget && (
+        {showReset && (
           <button
             type="button"
             onClick={() => onReset(section.id)}
             className="reset-link text-[0.8125rem] font-medium underline underline-offset-2 rounded"
           >
-            Reset to {resetTarget}
+            Reset
           </button>
         )}
       </div>
@@ -477,7 +477,6 @@ function Preview({ values }) {
 
 function App() {
   const [values, setValues] = useState({ ...PRESETS.default });
-  const [lastPreset, setLastPreset] = useState('default'); // 'default' | 'compact' — reset target, and what the two preset buttons apply
   const [lastCustomValues, setLastCustomValues] = useState(null);
   const [sectionsOpen, setSectionsOpen] = useState(false); // Sections list only renders once Custom has been opened
 
@@ -504,7 +503,6 @@ function App() {
       setLastCustomValues({ ...values });
     }
     setValues({ ...PRESETS[presetKey] });
-    setLastPreset(presetKey);
     setSectionsOpen(false);
   }, [values, lastCustomValues]);
 
@@ -518,15 +516,17 @@ function App() {
     });
   }, []);
 
+  // Reset always targets Default — it's a "back to the template's own
+  // arrangement" action, not tied to whichever preset was last clicked.
   const handleReset = useCallback((sectionId) => {
     setValues(prev => {
-      const next = { ...prev, [sectionId]: PRESETS[lastPreset][sectionId] };
+      const next = { ...prev, [sectionId]: PRESETS.default[sectionId] };
       if (computeActivePreset(next) === 'custom') {
         setLastCustomValues({ ...next });
       }
       return next;
     });
-  }, [lastPreset]);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -550,17 +550,14 @@ function App() {
               <div className="flex flex-col gap-3">
                 {SECTIONS.map(section => {
                   const currentValue = values[section.id];
-                  const presetTarget = PRESETS[lastPreset][section.id];
-                  const resetTarget = currentValue !== presetTarget
-                    ? (lastPreset === 'default' ? 'Default' : 'Compact')
-                    : null;
+                  const showReset = currentValue !== PRESETS.default[section.id];
                   return (
                     <SectionRow
                       key={section.id}
                       section={section}
                       value={currentValue}
                       onChange={handleSectionChange}
-                      resetTarget={resetTarget}
+                      showReset={showReset}
                       onReset={handleReset}
                     />
                   );
