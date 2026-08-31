@@ -1,0 +1,621 @@
+<title>Section Layout Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+
+<style>
+  :root {
+    --bg: #f3f1ee;
+    --surface: #ffffff;
+    --surface-sunken: #f5f3f0;
+    --border: #e6e2db;
+    --border-soft: #edeae4;
+    --text: #292420;
+    --text-muted: #857d73;
+    --text-faint: #d8d2c7;
+    --accent: #e2543d;
+    --accent-contrast: #fffaf7;
+    --accent-soft: #fbe6e0;
+    --chip-bg: #efebe4;
+    --shadow: 0 1px 2px rgba(41, 36, 32, 0.04), 0 8px 24px -12px rgba(41, 36, 32, 0.10);
+    --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #201c16;
+      --surface-sunken: #26221b;
+      --border: #38322a;
+      --border-soft: #2c271f;
+      --text: #f2ede4;
+      --text-muted: #a89c8b;
+      --text-faint: #423b31;
+      --accent: #ff7a5c;
+      --accent-contrast: #1c1109;
+      --accent-soft: #33241d;
+      --chip-bg: #2c271f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #201c16;
+    --surface-sunken: #26221b;
+    --border: #38322a;
+    --border-soft: #2c271f;
+    --text: #f2ede4;
+    --text-muted: #a89c8b;
+    --text-faint: #423b31;
+    --accent: #ff7a5c;
+    --accent-contrast: #1c1109;
+    --accent-soft: #33241d;
+    --chip-bg: #2c271f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow);
+  }
+  .hairline { background: var(--border); height: 1px; }
+
+  .bar { background: var(--text-faint); border-radius: 3px; height: 8px; }
+  .bar-strong { background: var(--text-muted); opacity: 0.55; border-radius: 3px; }
+  .pill { background: var(--text-faint); border-radius: 999px; height: 16px; }
+
+  .chip-value {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    border-radius: 999px;
+  }
+
+  .preset-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .preset-card:hover:not([aria-disabled="true"]) { border-color: var(--text-faint); }
+  .preset-card[aria-checked="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .preset-card[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  .preset-card:focus-visible, .thumb:focus-visible, .accordion-trigger:focus-visible,
+  .reset-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .check-badge {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .thumb {
+    background: var(--surface-sunken);
+    border: 1.5px solid var(--border);
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .thumb:hover:not([aria-checked="true"]) { border-color: var(--text-faint); }
+  .thumb[aria-checked="true"] {
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  .section-row { border: 1px solid var(--border-soft); background: var(--surface); }
+  .accordion-body { overflow: hidden; transition: max-height 0.2s ease, opacity 0.15s ease; }
+  .chevron { transition: transform 0.15s ease; color: var(--text-muted); }
+  .chevron.open { transform: rotate(180deg); }
+
+  .reset-link { color: var(--accent); }
+  .reset-link:hover { text-decoration-thickness: 2px; }
+
+  .preview-panel { background: var(--surface); border: 1px solid var(--border-soft); box-shadow: var(--shadow); }
+  .preview-name-bar { background: var(--text); opacity: 0.85; border-radius: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accordion-body, .chevron, .preset-card, .thumb { transition: none !important; }
+  }
+
+  ::selection { background: var(--accent-soft); color: var(--text); }
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useRef, useCallback } = React;
+
+/* ------------------------------------------------------------------ */
+/* Data model                                                          */
+/* ------------------------------------------------------------------ */
+
+const SECTIONS = [
+  { id: 'work',         label: 'Work Experience', options: ['Split', 'Standard'] },
+  { id: 'education',    label: 'Education',       options: ['Split', 'Standard'] },
+  { id: 'publications', label: 'Publications',    options: ['Split', 'Standard'] },
+  { id: 'awards',       label: 'Awards',          options: ['Split', 'Standard'] },
+  { id: 'skills',       label: 'Skills',          options: ['Grid', 'Two column', 'List'] },
+  { id: 'hobbies',      label: 'Hobbies',         options: ['Inline', 'List'] },
+];
+
+const PRESETS = {
+  default: { work: 'Standard', education: 'Standard', publications: 'Standard',
+             awards: 'Standard', skills: 'Grid', hobbies: 'Inline' },
+  compact: { work: 'Split', education: 'Split', publications: 'Split',
+             awards: 'Split', skills: 'List', hobbies: 'Inline' },
+};
+
+const PRESET_META = {
+  default: { title: 'Default', subtitle: 'Matched for your template.' },
+  compact: { title: 'Compact', subtitle: 'Fits more on one page.' },
+  custom:  { title: 'Custom',  subtitle: 'Your own arrangement.' },
+};
+
+const SECTION_KEYS = SECTIONS.map(s => s.id);
+
+function valuesEqual(a, b) {
+  return SECTION_KEYS.every(k => a[k] === b[k]);
+}
+
+function computeActivePreset(values) {
+  if (valuesEqual(values, PRESETS.default)) return 'default';
+  if (valuesEqual(values, PRESETS.compact)) return 'compact';
+  return 'custom';
+}
+
+/* ------------------------------------------------------------------ */
+/* Icons                                                                */
+/* ------------------------------------------------------------------ */
+
+function IconLayout() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+      <path d="M3 9h6" />
+    </svg>
+  );
+}
+function IconTune() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+      <line x1="17" y1="16" x2="23" y2="16" />
+    </svg>
+  );
+}
+function IconSliders() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <line x1="4" y1="6" x2="14" y2="6" />
+      <circle cx="17" cy="6" r="2" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <circle cx="7" cy="12" r="2" />
+      <line x1="4" y1="18" x2="14" y2="18" />
+      <circle cx="17" cy="18" r="2" />
+    </svg>
+  );
+}
+function IconChevron({ open }) {
+  return (
+    <svg className={"chevron" + (open ? " open" : "")} width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+function IconCheck() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Preset row                                                           */
+/* ------------------------------------------------------------------ */
+
+function PresetChip({ presetKey, icon, active, disabled, onSelect, tabIndex, chipRef }) {
+  const meta = PRESET_META[presetKey];
+  return (
+    <button
+      ref={chipRef}
+      type="button"
+      role="radio"
+      aria-checked={active}
+      aria-disabled={disabled}
+      data-preset={presetKey}
+      tabIndex={tabIndex}
+      onClick={() => { if (!disabled) onSelect(presetKey); }}
+      className="preset-card relative flex-1 flex items-start gap-3 rounded-2xl px-4 py-3.5 text-left"
+    >
+      <span style={{ color: 'var(--text)' }} className="mt-0.5">{icon}</span>
+      <span className="flex flex-col">
+        <span className="flex items-center gap-2 font-bold text-[0.9rem]" style={{ color: 'var(--text)' }}>
+          {meta.title}
+          {active && (
+            <span className="check-badge inline-flex items-center justify-center w-4 h-4 rounded-full">
+              <IconCheck />
+            </span>
+          )}
+        </span>
+        <span className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{meta.subtitle}</span>
+      </span>
+    </button>
+  );
+}
+
+function PresetRow({ activePreset, customDisabled, onSelect }) {
+  const order = ['default', 'compact', 'custom'];
+  const refs = useRef({});
+
+  const onKeyDown = (e) => {
+    if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return;
+    const active = document.activeElement;
+    const idx = order.indexOf(active && active.dataset ? active.dataset.preset : undefined);
+    e.preventDefault();
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    const next = (idx === -1 ? 0 : idx + dir + order.length) % order.length;
+    const el = refs.current[order[next]];
+    if (el) el.focus();
+  };
+
+  return (
+    <div role="radiogroup" aria-label="Layout type" className="flex gap-3" onKeyDown={onKeyDown}>
+      {order.map((key) => {
+        const icon = key === 'default' ? <IconLayout /> : key === 'compact' ? <IconTune /> : <IconSliders />;
+        const disabled = key === 'custom' && customDisabled;
+        return (
+          <PresetChip
+            key={key}
+            presetKey={key}
+            icon={icon}
+            active={activePreset === key}
+            disabled={disabled}
+            onSelect={onSelect}
+            tabIndex={activePreset === key ? 0 : -1}
+            chipRef={(el) => { refs.current[key] = el; }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section option thumbnails                                           */
+/* ------------------------------------------------------------------ */
+
+function Bars({ n = 3, className = "" }) {
+  const widths = ['100%', '84%', '64%', '78%'];
+  return (
+    <div className={"flex flex-col gap-1.5 " + className}>
+      {Array.from({ length: n }).map((_, i) => (
+        <div key={i} className="bar" style={{ width: widths[i % widths.length] }} />
+      ))}
+    </div>
+  );
+}
+
+function ThumbSplitStandard({ option }) {
+  if (option === 'Split') {
+    return (
+      <div className="flex gap-2.5 p-3">
+        <div className="flex flex-col gap-1.5" style={{ width: '32%' }}>
+          <div className="bar-strong" style={{ height: 8, width: '80%' }} />
+          <div className="bar" style={{ width: '50%' }} />
+        </div>
+        <div style={{ width: '68%' }}><Bars n={3} /></div>
+      </div>
+    );
+  }
+  return (
+    <div className="p-3">
+      <div className="bar-strong mb-1.5" style={{ height: 8, width: '70%' }} />
+      <Bars n={3} />
+    </div>
+  );
+}
+
+function ThumbSkills({ option }) {
+  if (option === 'Grid') {
+    return (
+      <div className="grid grid-cols-3 gap-1.5 p-3">
+        {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bar" />)}
+      </div>
+    );
+  }
+  if (option === 'Two column') {
+    return (
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 p-3">
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bar" />)}
+      </div>
+    );
+  }
+  return <div className="p-3"><Bars n={4} /></div>;
+}
+
+function ThumbHobbies({ option }) {
+  if (option === 'Inline') {
+    return (
+      <div className="flex flex-wrap gap-1.5 p-3">
+        {[40, 32, 48, 28].map((w, i) => <div key={i} className="pill" style={{ width: w }} />)}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1.5 p-3">
+      {[0, 1, 2].map(i => <div key={i} className="bar" style={{ width: '60%' }} />)}
+    </div>
+  );
+}
+
+function OptionThumb({ sectionId, option }) {
+  if (sectionId === 'skills') return <ThumbSkills option={option} />;
+  if (sectionId === 'hobbies') return <ThumbHobbies option={option} />;
+  return <ThumbSplitStandard option={option} />;
+}
+
+function SectionOptionGroup({ section, value, onChange }) {
+  const refs = useRef({});
+  const onKeyDown = (e) => {
+    if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return;
+    e.preventDefault();
+    const idx = section.options.indexOf(value);
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    const next = section.options[(idx + dir + section.options.length) % section.options.length];
+    onChange(next);
+    const el = refs.current[next];
+    if (el) el.focus();
+  };
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={section.label + " layout"}
+      className={"grid gap-3 " + (section.options.length === 3 ? "grid-cols-3" : "grid-cols-2")}
+      onKeyDown={onKeyDown}
+    >
+      {section.options.map(option => {
+        const selected = value === option;
+        return (
+          <button
+            key={option}
+            ref={el => (refs.current[option] = el)}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(option)}
+            className="thumb relative rounded-xl text-left"
+          >
+            {selected && (
+              <span className="check-badge absolute top-2 right-2 inline-flex items-center justify-center w-4 h-4 rounded-full">
+                <IconCheck />
+              </span>
+            )}
+            <OptionThumb sectionId={section.id} option={option} />
+            <div className="text-center text-xs font-semibold pb-2.5 -mt-1" style={{ color: 'var(--text-muted)' }}>
+              {option}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section accordion row                                                */
+/* ------------------------------------------------------------------ */
+
+function SectionRow({ section, value, isExpanded, onToggle, onChange, resetTarget, onReset }) {
+  const panelId = "panel-" + section.id;
+  const headerId = "header-" + section.id;
+  return (
+    <div className="section-row rounded-2xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3.5">
+        <button
+          id={headerId}
+          type="button"
+          aria-expanded={isExpanded}
+          aria-controls={panelId}
+          onClick={() => onToggle(section.id)}
+          className="accordion-trigger flex-1 flex items-center justify-between gap-3 text-left rounded-lg"
+        >
+          <span className="font-medium">{section.label}</span>
+          <span className="flex items-center gap-3">
+            <span className="chip-value px-2.5 py-1">{value}</span>
+            <IconChevron open={isExpanded} />
+          </span>
+        </button>
+      </div>
+      {resetTarget && (
+        <div className="px-4 pb-2.5 -mt-2">
+          <button
+            type="button"
+            onClick={() => onReset(section.id)}
+            className="reset-link text-xs font-semibold underline underline-offset-2 rounded"
+          >
+            Reset to {resetTarget}
+          </button>
+        </div>
+      )}
+      <div
+        id={panelId}
+        role="region"
+        aria-labelledby={headerId}
+        className="accordion-body"
+        style={{ maxHeight: isExpanded ? 420 : 0, opacity: isExpanded ? 1 : 0 }}
+      >
+        <div className="px-4 pb-4 pt-1">
+          <SectionOptionGroup section={section} value={value} onChange={(opt) => onChange(section.id, opt)} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Preview pane                                                         */
+/* ------------------------------------------------------------------ */
+
+function PreviewBlock({ section, value }) {
+  return (
+    <div className="mb-4">
+      <div className="eyebrow mb-1.5">{section.label}</div>
+      <div className="rounded-lg" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-soft)' }}>
+        <OptionThumb sectionId={section.id} option={value} />
+      </div>
+    </div>
+  );
+}
+
+function Preview({ values }) {
+  return (
+    <div className="sticky top-6">
+      <div className="preview-panel rounded-2xl p-6">
+        <div className="mb-5">
+          <div className="preview-name-bar mb-2" style={{ height: 11, width: '55%' }} />
+          <div className="bar" style={{ width: '35%' }} />
+        </div>
+        {SECTIONS.map(s => <PreviewBlock key={s.id} section={s} value={values[s.id]} />)}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* App                                                                  */
+/* ------------------------------------------------------------------ */
+
+function App() {
+  const [values, setValues] = useState({ ...PRESETS.default });
+  const [lastPreset, setLastPreset] = useState('default');
+  const [lastCustomValues, setLastCustomValues] = useState(null);
+  const [expanded, setExpanded] = useState(() => new Set());
+
+  const activePreset = useMemo(() => computeActivePreset(values), [values]);
+
+  const handlePresetSelect = useCallback((presetKey) => {
+    if (presetKey === 'custom') {
+      if (!lastCustomValues) return;
+      setValues({ ...lastCustomValues });
+      return;
+    }
+    if (activePreset === 'custom') {
+      setLastCustomValues({ ...values });
+    }
+    setValues({ ...PRESETS[presetKey] });
+    setLastPreset(presetKey);
+  }, [activePreset, values, lastCustomValues]);
+
+  const handleSectionChange = useCallback((sectionId, option) => {
+    setValues(prev => {
+      const next = { ...prev, [sectionId]: option };
+      if (computeActivePreset(next) === 'custom') {
+        setLastCustomValues({ ...next });
+      }
+      return next;
+    });
+  }, []);
+
+  const handleReset = useCallback((sectionId) => {
+    setValues(prev => {
+      const next = { ...prev, [sectionId]: PRESETS[lastPreset][sectionId] };
+      if (computeActivePreset(next) === 'custom') {
+        setLastCustomValues({ ...next });
+      }
+      return next;
+    });
+  }, [lastPreset]);
+
+  const toggleExpand = useCallback((id) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <div className="max-w-7xl mx-auto px-6 py-10 flex gap-8 items-start">
+        <div className="w-[40%] shrink-0">
+          <Preview values={values} />
+        </div>
+
+        <div className="w-[60%]">
+          <div className="card rounded-2xl p-6">
+            <div className="eyebrow mb-3">Layout type</div>
+            <PresetRow
+              activePreset={activePreset}
+              customDisabled={!lastCustomValues}
+              onSelect={handlePresetSelect}
+            />
+
+            <div className="hairline my-6" />
+
+            <div className="eyebrow mb-3">Sections</div>
+            <div className="flex flex-col gap-3">
+              {SECTIONS.map(section => {
+                const currentValue = values[section.id];
+                const presetTarget = PRESETS[lastPreset][section.id];
+                const resetTarget = currentValue !== presetTarget
+                  ? (lastPreset === 'default' ? 'Default' : 'Compact')
+                  : null;
+                return (
+                  <SectionRow
+                    key={section.id}
+                    section={section}
+                    value={currentValue}
+                    isExpanded={expanded.has(section.id)}
+                    onToggle={toggleExpand}
+                    onChange={handleSectionChange}
+                    resetTarget={resetTarget}
+                    onReset={handleReset}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
