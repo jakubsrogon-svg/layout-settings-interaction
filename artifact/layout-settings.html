@@ -492,8 +492,9 @@ function App() {
   const handlePresetSelect = useCallback((presetKey) => {
     if (presetKey === 'custom') {
       // Always clickable: seeds the editor from the last custom snapshot if
-      // one exists, or from whatever is currently active otherwise.
-      if (lastCustomValues) setValues({ ...lastCustomValues });
+      // one exists, or from Default otherwise — Custom starts out as
+      // Default until the user actually changes something.
+      setValues({ ...(lastCustomValues || PRESETS.default) });
       setSectionsOpen(true);
       return;
     }
