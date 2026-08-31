@@ -450,8 +450,16 @@ function PreviewBlock({ section, value }) {
       <div className="text-[0.6875rem] font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--muted)' }}>
         {section.label}
       </div>
-      <div style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-soft)', borderRadius: 12 }}>
-        <OptionThumb sectionId={section.id} option={value} />
+      {/* Every option for this section is stacked in the same grid cell (only
+          the active one visible) so the block reserves the tallest option's
+          height up front — switching options re-flows the thumbnail's own
+          content but never shifts anything else in the preview. */}
+      <div style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-soft)', borderRadius: 12, display: 'grid' }}>
+        {section.options.map(option => (
+          <div key={option} style={{ gridArea: '1 / 1', visibility: option === value ? 'visible' : 'hidden' }}>
+            <OptionThumb sectionId={section.id} option={option} />
+          </div>
+        ))}
       </div>
     </div>
   );
