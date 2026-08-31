@@ -416,10 +416,6 @@ function App() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-6 py-10 flex gap-8 items-start">
-        <div className="w-[40%] shrink-0">
-          <Preview values={values} />
-        </div>
-
         <div className="w-[60%]">
           <div className="rounded-2xl bg-white shadow-sm p-6">
             <div className="text-xs font-bold tracking-widest text-stone-500 mb-3">LAYOUT TYPE</div>
@@ -454,6 +450,10 @@ function App() {
               </p>
             )}
           </div>
+        </div>
+
+        <div className="w-[40%] shrink-0">
+          <Preview values={values} />
         </div>
       </div>
     </div>
