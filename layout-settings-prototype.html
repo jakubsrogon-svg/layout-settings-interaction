@@ -9,12 +9,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
 <style>
+  /* Always reserve the vertical scrollbar's width, even on pages short
+     enough not to need it yet. Without this, revealing the Sections panel
+     (tall enough to trigger scrolling) makes the scrollbar appear, which
+     narrows the viewport and shifts this centered layout sideways by half
+     the scrollbar's width — a horizontal jump that has nothing to do with
+     the panel itself. */
+  html { overflow-y: scroll; }
   body { background:#f5f5f4; }
-  .sections-collapse { transition: grid-template-rows 0.25s ease; }
-  .hint-collapse { transition: opacity 0.2s ease, max-height 0.2s ease; }
-  @media (prefers-reduced-motion: reduce) {
-    .sections-collapse, .hint-collapse { transition: none !important; }
-  }
 </style>
 </head>
 <body>
@@ -441,39 +443,28 @@ function App() {
             <div className="h-px bg-stone-200 my-6" />
 
             <div className="text-xs font-bold tracking-widest text-stone-500 mb-3">SECTIONS</div>
-            {/* Both the hint and the section list stay mounted; only their
-                grid row (0fr/1fr) and opacity animate. That turns the reveal
-                into a smooth grow/shrink instead of an instant jump, and
-                nothing else on the page ever has to snap to a new position. */}
-            <div
-              className="grid sections-collapse"
-              style={{ gridTemplateRows: sectionsOpen ? '1fr' : '0fr' }}
-            >
-              <div className="overflow-hidden">
-                <div className="flex flex-col gap-3 pb-1">
-                  {SECTIONS.map(section => {
-                    const currentValue = values[section.id];
-                    const showReset = currentValue !== PRESETS.default[section.id];
-                    return (
-                      <SectionRow
-                        key={section.id}
-                        section={section}
-                        value={currentValue}
-                        onChange={handleSectionChange}
-                        showReset={showReset}
-                        onReset={handleReset}
-                      />
-                    );
-                  })}
-                </div>
+            {sectionsOpen ? (
+              <div className="flex flex-col gap-3">
+                {SECTIONS.map(section => {
+                  const currentValue = values[section.id];
+                  const showReset = currentValue !== PRESETS.default[section.id];
+                  return (
+                    <SectionRow
+                      key={section.id}
+                      section={section}
+                      value={currentValue}
+                      onChange={handleSectionChange}
+                      showReset={showReset}
+                      onReset={handleReset}
+                    />
+                  );
+                })}
               </div>
-            </div>
-            <p
-              className="text-sm text-stone-400 overflow-hidden hint-collapse"
-              style={{ maxHeight: sectionsOpen ? 0 : 40, opacity: sectionsOpen ? 0 : 1 }}
-            >
-              Switch to <span className="font-medium text-stone-500">Custom</span> to fine-tune individual sections.
-            </p>
+            ) : (
+              <p className="text-sm text-stone-400">
+                Switch to <span className="font-medium text-stone-500">Custom</span> to fine-tune individual sections.
+              </p>
+            )}
           </div>
         </div>
 
